@@ -1,0 +1,7 @@
+include_directories(${CMAKE_SOURCE_DIR})
+
+#add_executable(any_cast_cv_failed any_cast_cv_failed)
+add_executable(any_test any_test)
+#add_executable(any_test_cv_to_rv_failed any_test_cv_to_rv_failed)
+add_executable(any_test_mplif any_test_mplif)
+#add_executable(any_test_temporary_to_ref_failed any_test_temporary_to_ref_failed)

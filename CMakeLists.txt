@@ -8,3 +8,4 @@ endif ()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/engine)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+add_subdirectory(${CMAKE_SOURCE_DIR}/test/any_test)
