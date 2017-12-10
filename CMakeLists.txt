@@ -1,11 +1,14 @@
 cmake_minimum_required (VERSION 2.8.12.2)
-project (fysob)
-add_definitions(-std=c++11)
+project (joker)
+
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+
 add_definitions(-DASIO_STANDALONE)
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions(-DASIO_MSVC)
 endif ()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/engine)
+add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/lua)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/any_test)
