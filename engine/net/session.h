@@ -17,6 +17,8 @@ public:
     explicit session(asio::io_service& work_service, asio::io_service& io_service)
         : socket_(io_service)
         , io_work_service_(work_service)
+        , write_remain_length_(0)
+        , writing_(false)
     {
         read_buffer_ = std::make_shared<asio_buffer>();
         write_buffer_ = std::make_shared<asio_buffer>();
@@ -30,6 +32,14 @@ public:
     void start()
     {
         read();
+    }
+
+    void notify_write(std::size_t length)
+    {
+        write_remain_length_ += length;
+        if (!writing_ && write_remain_length_ > 0) {
+            write();
+        }
     }
 
 private:
@@ -52,10 +62,34 @@ private:
         }
     }
 
+    void write()
+    {
+        writing_ = true;
+        auto self(shared_from_this());
+        socket_.async_write_some(write_buffer_->const_buffer(),
+            [this, self](std::error_code ec, std::size_t length){handle_write(ec, length);});
+    }
+
+    void handle_write(std::error_code& ec, std::size_t length)
+    {
+        if (!ec) {
+            write_buffer_->retrieve(length);
+            write_remain_length_ -= length;
+            writing_ = false;
+            if (write_remain_length_ > 0) {
+                write();
+            }
+        } else {
+            printf("write error is %s \n", ec.message().c_str());
+        }
+    }
+
     void on_receive()
     {
         std::unique_ptr<data_block> free_data = read_buffer_->read(read_buffer_->readable_bytes());
         printf("receive : %i bytes. message : %s \n", free_data->len, free_data->data);
+        write_buffer_->append(free_data->data, free_data->len);
+        notify_write(free_data->len);
     }
 
 private:
@@ -63,6 +97,8 @@ private:
     tcp::socket socket_;
     std::shared_ptr<asio_buffer> read_buffer_;
     std::shared_ptr<asio_buffer> write_buffer_;
+    std::atomic_size_t write_remain_length_;
+    std::atomic_bool writing_;
 }; // class session
 
 typedef std::shared_ptr<session> session_ptr;

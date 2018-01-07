@@ -25,7 +25,9 @@ int main(int argc, char* argv[])
             std::cin.getline(request, max_length);
             size_t request_length = std::strlen(request);
             asio::write(s, asio::buffer(request, request_length));
-        }
+            asio::read(s, asio::buffer(request, 1));
+            std::cout << "Receive message: " << request << std::endl;
+       }
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << '\n';
     }
