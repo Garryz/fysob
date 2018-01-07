@@ -18,6 +18,8 @@ public:
         : socket_(io_service)
         , io_work_service_(work_service)
     {
+        read_buffer_ = std::make_shared<asio_buffer>();
+        write_buffer_ = std::make_shared<asio_buffer>();
     }
 
     tcp::socket& socket()
@@ -34,37 +36,33 @@ private:
     void read()
     {
         auto self(shared_from_this());
-        socket_.async_read_some(buffer_.mutable_buffer(),
+        socket_.async_read_some(read_buffer_->mutable_buffer(),
             [this, self](std::error_code ec, std::size_t length){handle_read(ec, length);});
     }
 
     void handle_read(std::error_code& ec, std::size_t length)
     {
         if (!ec) {
-            buffer_.has_written(length);
-            std::shared_ptr<std::vector<char> > buf(new std::vector<char>);
-            buf->resize(length);
-            std::unique_ptr<data_block> free_data = buffer_.read(length);
-            std::copy(free_data->data, free_data->data + free_data->len, buf->begin());
+            read_buffer_->has_written(length);
             auto self(shared_from_this());
-            io_work_service_.post([this, self, buf, length]() {on_receive(buf, length);});
+            io_work_service_.post([this, self]() {on_receive();});
             read();
         } else {
-            std::cout << "read error is " << ec.message() << std::endl;
+            printf("read error is %s \n", ec.message().c_str());
         }
     }
 
-    void on_receive(std::shared_ptr<std::vector<char> > buffers, std::size_t length)
+    void on_receive()
     {
-        char* data_stream = &(*buffers->begin());
-        std::cout << "receive :" << length << " bytes. "
-            << "message :" << data_stream << std::endl;
+        std::unique_ptr<data_block> free_data = read_buffer_->read(read_buffer_->readable_bytes());
+        printf("receive : %i bytes. message : %s \n", free_data->len, free_data->data);
     }
 
 private:
     asio::io_service& io_work_service_;
     tcp::socket socket_;
-    asio_buffer buffer_;
+    std::shared_ptr<asio_buffer> read_buffer_;
+    std::shared_ptr<asio_buffer> write_buffer_;
 }; // class session
 
 typedef std::shared_ptr<session> session_ptr;
