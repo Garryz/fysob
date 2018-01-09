@@ -8,5 +8,6 @@ add_executable(client client)
 target_link_libraries(client ${CMAKE_THREAD_LIBS_INIT})
 add_executable(print_server print_server 
     ${CMAKE_SOURCE_DIR}/engine/net/asio_buffer
-    ${CMAKE_SOURCE_DIR}/engine/handle/context)
+    ${CMAKE_SOURCE_DIR}/engine/handle/context
+    ${CMAKE_SOURCE_DIR}/engine/handle/pipeline)
 target_link_libraries(print_server ${CMAKE_THREAD_LIBS_INIT})

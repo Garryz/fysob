@@ -2,6 +2,7 @@
 #define ENGINE_NET_SESSION_H
 
 #include <third_party/asio.hpp>
+#include <engine/handle/pipeline.h>
 #include <engine/net/asio_buffer.h>
 
 namespace engine
@@ -29,8 +30,20 @@ public:
         return socket_;
     }
 
+    std::shared_ptr<asio_buffer> read_buffer()
+    {
+        return read_buffer_;
+    }
+
+    std::shared_ptr<asio_buffer> write_buffer()
+    {
+        return write_buffer_;
+    }
+
     void start()
     {
+        auto self(shared_from_this());
+        pipeline_ = new pipeline(self);
         read();
     }
 
@@ -40,6 +53,11 @@ public:
         if (!writing_ && write_remain_length_ > 0) {
             write();
         }
+    }
+
+    void close()
+    {
+        // TODO
     }
 
 private:
@@ -55,7 +73,7 @@ private:
         if (!ec) {
             read_buffer_->has_written(length);
             auto self(shared_from_this());
-            io_work_service_.post([this, self]() {on_receive();});
+            io_work_service_.post([this, self]() {pipeline_->fire_read();});
             read();
         } else {
             printf("read error is %s \n", ec.message().c_str());
@@ -83,15 +101,6 @@ private:
             printf("write error is %s \n", ec.message().c_str());
         }
     }
-
-    void on_receive()
-    {
-        std::unique_ptr<data_block> free_data = read_buffer_->read(read_buffer_->readable_bytes());
-        printf("receive : %i bytes. message : %s \n", free_data->len, free_data->data);
-        write_buffer_->append(free_data->data, free_data->len);
-        notify_write(free_data->len);
-    }
-
 private:
     asio::io_service& io_work_service_;
     tcp::socket socket_;
@@ -99,6 +108,7 @@ private:
     std::shared_ptr<asio_buffer> write_buffer_;
     std::atomic_size_t write_remain_length_;
     std::atomic_bool writing_;
+    pipeline* pipeline_;
 }; // class session
 
 typedef std::shared_ptr<session> session_ptr;

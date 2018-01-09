@@ -32,7 +32,8 @@ public:
     template<typename BASE_DATA_TYPE>
     asio_buffer& append(BASE_DATA_TYPE x)
     {
-        return append(&adapte_endian(x), sizeof x);    
+        BASE_DATA_TYPE data = adapte_endian(x);
+        return append(&data, sizeof x);    
     }
 
     asio_buffer& append(const std::string& str)
