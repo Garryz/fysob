@@ -182,14 +182,6 @@ private:
 
         virtual void read(std::unique_ptr<any> msg)
         {
-            auto buffer = any_cast<std::shared_ptr<asio_buffer>>(*msg);
-            std::unique_ptr<data_block> free_data = buffer->read(buffer->readable_bytes());
-            printf("receive : %i bytes. message : %s \n", free_data->len, free_data->data);
-            read_data_ptr read_data;
-            read_data.data = free_data->data;
-            read_data.len = free_data->len;
-            auto result = new any(read_data);
-            write(std::unique_ptr<any>(result));
         }
 
         virtual void write(std::unique_ptr<any> msg)

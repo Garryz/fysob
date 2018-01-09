@@ -40,10 +40,17 @@ public:
         return write_buffer_;
     }
 
-    void start()
+    std::shared_ptr<session> add_handler(std::shared_ptr<abstract_handler> handler)
+    {
+        pipeline_->add_handler(handler);
+        return shared_from_this();
+    }
+
+    void start(const std::function<void(std::shared_ptr<session>)>& init_handlers)
     {
         auto self(shared_from_this());
         pipeline_ = new pipeline(self);
+        init_handlers(self);
         read();
     }
 

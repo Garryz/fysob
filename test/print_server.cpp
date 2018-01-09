@@ -1,5 +1,24 @@
 #include <iostream>
+#include <engine/handle/abstract_handler.h>
 #include <engine/net/server.h>
+
+using namespace engine;
+
+class handler : public abstract_handler
+{
+public:
+    virtual void decode(context* ctx, std::unique_ptr<any> msg)
+    {
+        auto buffer = any_cast<std::shared_ptr<asio_buffer>>(*msg);
+        std::unique_ptr<data_block> free_data = buffer->read(buffer->readable_bytes());
+        printf("receive: %i bytes. message: %s \n", free_data->len, free_data->data);
+        read_data_ptr read_data;
+        read_data.data = free_data->data;
+        read_data.len = free_data->len;
+        auto result = new any(read_data);
+        ctx->fire_write(std::unique_ptr<any>(result));
+    }
+};
 
 int main(int argc, char* argv[])
 {
@@ -13,6 +32,10 @@ int main(int argc, char* argv[])
         using namespace engine;
 
         server s("127.0.0.1", atoi(argv[1]), 10);
+
+        s.set_init_handlers([](std::shared_ptr<session> session){
+                    session->add_handler(std::make_shared<handler>());
+                });
 
         s.run();
 

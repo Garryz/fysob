@@ -45,6 +45,11 @@ public:
         io_service_pool_.stop();
         io_service_work_pool_.stop();
     }
+
+    void set_init_handlers(std::function<void(std::shared_ptr<session>)> init_handlers)
+    {
+        init_handlers_ = init_handlers;
+    }
 private:
     void accept()
     {
@@ -57,7 +62,7 @@ private:
     void handle_accept(session_ptr session, std::error_code& ec)
     {
         if (!ec) {
-            session->start();
+            session->start(init_handlers_);
         } else {
             std::cout << "accept error: " << ec.message() << std::endl;
         }
@@ -75,6 +80,7 @@ private:
     io_service_pool     io_service_pool_;
     io_service_pool     io_service_work_pool_;
     tcp::acceptor       acceptor_;
+    std::function<void(std::shared_ptr<session>)>   init_handlers_;
 }; // class server
 
 } // namespace engine

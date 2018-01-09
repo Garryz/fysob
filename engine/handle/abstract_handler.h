@@ -15,7 +15,9 @@ public:
     {
     }
 
-    virtual ~abstract_handler();
+    virtual ~abstract_handler()
+    {
+    }
 
     virtual void connect(context* ctx)
     {
