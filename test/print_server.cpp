@@ -9,6 +9,9 @@ class handler : public abstract_handler
 public:
     virtual void decode(context* ctx, std::unique_ptr<any> msg)
     {
+        printf("session id = %i \n", ctx->session_id());
+        any user_data = ctx->get_user_data();
+        printf("user data = %s \n", any_cast<const char*>(user_data));
         auto buffer = any_cast<std::shared_ptr<asio_buffer>>(*msg);
         std::unique_ptr<data_block> free_data = buffer->read(buffer->readable_bytes());
         printf("receive: %i bytes. message: %s \n", free_data->len, free_data->data);
@@ -34,7 +37,8 @@ int main(int argc, char* argv[])
         server s("127.0.0.1", atoi(argv[1]), 10);
 
         s.set_init_handlers([](std::shared_ptr<session> session){
-                    session->add_handler(std::make_shared<handler>());
+                    session->add_handler(std::make_shared<handler>())
+                        ->set_user_data("test");
                 });
 
         s.run();

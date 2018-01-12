@@ -15,11 +15,14 @@ class session
 public:
     session(const session&) = delete;
     session& operator=(const session&) = delete;
-    explicit session(asio::io_service& work_service, asio::io_service& io_service)
+    explicit session(std::size_t id, 
+            asio::io_service& work_service, 
+            asio::io_service& io_service)
         : socket_(io_service)
         , io_work_service_(work_service)
         , write_remain_length_(0)
         , writing_(false)
+        , id_(id)
     {
         read_buffer_ = std::make_shared<asio_buffer>();
         write_buffer_ = std::make_shared<asio_buffer>();
@@ -40,12 +43,23 @@ public:
         return write_buffer_;
     }
 
+    std::size_t id()
+    {
+        return id_;
+    }
+
     std::shared_ptr<session> add_handler(std::shared_ptr<abstract_handler> handler)
     {
         pipeline_->add_handler(handler);
         return shared_from_this();
     }
 
+    std::shared_ptr<session> set_user_data(any user_data)
+    {
+        pipeline_->set_user_data(user_data);
+        return shared_from_this();
+    }
+    
     void start(const std::function<void(std::shared_ptr<session>)>& init_handlers)
     {
         auto self(shared_from_this());
@@ -115,6 +129,7 @@ private:
     std::shared_ptr<asio_buffer> write_buffer_;
     std::atomic_size_t write_remain_length_;
     std::atomic_bool writing_;
+    std::size_t id_;
     pipeline* pipeline_;
 }; // class session
 

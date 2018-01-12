@@ -3,6 +3,7 @@
 
 #include <map>
 #include <third_party/asio.hpp>
+#include <engine/common/common.h>
 #include <engine/net/io_service_pool.h>
 #include <engine/net/session.h>
 
@@ -53,7 +54,8 @@ public:
 private:
     void accept()
     {
-        session_ptr new_session(new session(io_service_work_pool_.get_io_service(),
+        session_ptr new_session(new session(get_increase_id(),
+                io_service_work_pool_.get_io_service(),
                 io_service_pool_.get_io_service()));
         acceptor_.async_accept(new_session->socket(),
                 [=](std::error_code ec){handle_accept(new_session, ec);});

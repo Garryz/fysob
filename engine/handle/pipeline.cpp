@@ -20,6 +20,11 @@ void pipeline::notify_write(std::size_t length)
     session_->notify_write(length);
 }
 
+std::size_t pipeline::session_id()
+{
+    return session_->id();
+}
+
 void pipeline::close()
 {
     session_->close();

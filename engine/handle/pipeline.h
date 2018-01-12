@@ -20,7 +20,7 @@ public:
         : session_(session)
     {
         head_ = new head_context(this);
-        tail_ = new tail_context();
+        tail_ = new tail_context(this);
         head_->next = tail_;
         tail_->prev = head_;
         ctxs_.push_back(std::unique_ptr<context>(head_));
@@ -99,11 +99,13 @@ public:
         return false;
     }
 
+    std::size_t session_id();
+
     void close();
 
     pipeline& add_handler(std::shared_ptr<abstract_handler> handler)
     {
-        context* ctx = new context(handler);
+        context* ctx = new context(this, handler);
         tail_->prev->next = ctx;
         ctx->prev = tail_->prev; 
         ctx->next = tail_;
@@ -123,6 +125,16 @@ public:
         head_->fire_read(std::move(std::unique_ptr<any>(msg)));
     }
 
+    void set_user_data(any user_data)
+    {
+        user_data_ = user_data;
+    }
+
+    any get_user_data()
+    {
+        return user_data_;
+    }
+
 private:
     class head_context : public context
     {
@@ -130,8 +142,7 @@ private:
         head_context(const head_context&) = delete;
         head_context& operator=(const head_context&) = delete;
         explicit head_context(pipeline* pipeline)
-            : context(NULL)
-            , pipeline_(pipeline)
+            : context(pipeline, NULL)
         {
         }
 
@@ -158,8 +169,6 @@ private:
         {
             pipeline_->close(); 
         }
-    private:
-        pipeline* pipeline_;
     }; // class head_context
 
     class tail_context : public context
@@ -167,8 +176,8 @@ private:
     public:
         tail_context(const tail_context&) = delete; 
         tail_context& operator=(const tail_context&) = delete;
-        tail_context()
-            : context(NULL)
+        tail_context(pipeline* pipeline)
+            : context(pipeline, NULL)
         {
         }
 
@@ -199,6 +208,7 @@ private:
     context* head_;
     context* tail_;
     std::vector<std::unique_ptr<context>> ctxs_;
+    any user_data_;
 }; // class pipeline
 
 } // namespace engine

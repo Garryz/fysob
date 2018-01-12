@@ -9,15 +9,18 @@ namespace engine
 {
 
 class abstract_handler;
+class pipeline;
 
 class context
 {
 public:
     context(const context&) = delete;
     context& operator=(const context&) = delete;
-    explicit context(std::shared_ptr<abstract_handler> handler)
+    explicit context(pipeline* pipeline, 
+            std::shared_ptr<abstract_handler> handler)
         : prev(NULL)
         , next(NULL)
+        , pipeline_(pipeline)
         , handler_(handler)
     {
     }
@@ -65,8 +68,16 @@ public:
         }
     }
 
+    std::size_t session_id();
+
+    void set_user_data(any user_data);
+
+    any get_user_data();
+
     context* prev;
     context* next;
+protected:
+    pipeline* pipeline_;
 private:
     std::shared_ptr<abstract_handler> handler_;
 }; // class context
