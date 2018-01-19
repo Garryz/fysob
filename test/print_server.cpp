@@ -1,6 +1,10 @@
 #include <iostream>
-#include <engine/handle/abstract_handler.h>
+
+#include <third_party/g3log/g3log/g3log.hpp>
+#include <third_party/g3log/g3log/logworker.hpp>
+#include <engine/handler/abstract_handler.h>
 #include <engine/net/server.h>
+#include <engine/net/client.h>
 
 using namespace engine;
 
@@ -9,18 +13,15 @@ class handler : public abstract_handler
 public:
     virtual void decode(context* ctx, std::unique_ptr<any> msg)
     {
-        printf("session id = %i \n", ctx->session_id());
-        any user_data = ctx->get_user_data();
-        printf("user data = %s \n", any_cast<const char*>(user_data));
         auto buffer = any_cast<std::shared_ptr<asio_buffer>>(*msg);
-        std::unique_ptr<data_block> free_data = buffer->read(buffer->readable_bytes());
-        printf("receive: %i bytes. message: %s \n", free_data->len, free_data->data);
-        read_data_ptr read_data;
-        read_data.data = free_data->data;
-        read_data.len = free_data->len;
-        auto result = new any(read_data);
-        ctx->fire_write(std::unique_ptr<any>(result));
-    }
+        assert(buffer);
+        assert(buffer->readable_bytes() >= sizeof(char));
+        char result = buffer->read<char>();
+        LOGF(INFO, "result = %c, readable_bytes = %d", result, buffer->readable_bytes());
+        auto response = new any(result);
+        ctx->write(std::unique_ptr<any>(response)); 
+        //ctx->close();
+    }   
 };
 
 int main(int argc, char* argv[])
@@ -33,13 +34,21 @@ int main(int argc, char* argv[])
 
         using namespace std;
         using namespace engine;
+        using namespace g3;
+
+        std::unique_ptr<LogWorker> logworker{ LogWorker::createLogWorker() };
+        logworker->addSink(std2::make_unique<FileSink>(argv[0], "./"), &FileSink::fileWrite);
+        initializeLogging(logworker.get());
+    
+        client c("127.0.0.1", atoi(argv[1]));
 
         server s("127.0.0.1", atoi(argv[1]), 10);
 
+        s.set_read_high_water_mask(3);
+
         s.set_init_handlers([](std::shared_ptr<session> session){
-                    session->add_handler(std::make_shared<handler>())
-                        ->set_user_data("test");
-                });
+            session->add_handler("test", std::make_shared<handler>());        
+        });
 
         s.run();
 

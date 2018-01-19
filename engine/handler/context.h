@@ -1,14 +1,14 @@
-#ifndef ENGINE_HANDLE_CONTEXT_H
-#define ENGINE_HANDLE_CONTEXT_H
+#ifndef ENGINE_HANDLER_CONTEXT_H
+#define ENGINE_HANDLER_CONTEXT_H
 
 #include <memory>
-
-#include <engine/common/any.h>
+#include <string>
 
 namespace engine
 {
 
 class abstract_handler;
+class any;
 class pipeline;
 
 class context
@@ -16,20 +16,22 @@ class context
 public:
     context(const context&) = delete;
     context& operator=(const context&) = delete;
-    explicit context(pipeline* pipeline, 
+    context(pipeline* pipeline, 
+            const std::string& name,
             std::shared_ptr<abstract_handler> handler)
-        : prev(NULL)
-        , next(NULL)
+        : prev(nullptr)
+        , next(nullptr)
         , pipeline_(pipeline)
+        , name_(name)
         , handler_(handler)
     {
     }
 
     virtual ~context()
     {
-        handler_ = NULL;
-        next = NULL;
-        prev = NULL;
+        handler_    = nullptr;
+        next        = nullptr;
+        prev        = nullptr;
     }
 
     virtual void connect();
@@ -74,15 +76,15 @@ public:
 
     any get_user_data();
 
-    context* prev;
-    context* next;
-protected:
-    pipeline* pipeline_;
+    context*    prev;
+    context*    next;
+protected:  
+    pipeline*   pipeline_;
 private:
+    std::string name_;
     std::shared_ptr<abstract_handler> handler_;
 }; // class context
 
 } // namespace engine
 
-#endif // ENGINE_HANDLE_CONTEXT_H
-
+#endif // ENGINE_HANDLER_CONTEXT_H

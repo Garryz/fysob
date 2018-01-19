@@ -6,14 +6,13 @@
 namespace engine
 {
 
-static std::atomic_size_t auto_increase_id(0);
+static std::atomic<uint32_t> auto_session_increase_id_{0};
 
-static std::size_t get_increase_id()
+static uint32_t get_session_increase_id()
 {
-    auto_increase_id++;
-    return auto_increase_id;
+    return ++auto_session_increase_id_;
 }
 
-} // namespace engine
+} // namespac engine 
 
 #endif // ENGINE_COMMON_COMMON_H

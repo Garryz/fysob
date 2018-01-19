@@ -1,7 +1,7 @@
-#ifndef ENGINE_HANDLE_ABSTRACT_HANDLER_H
-#define ENGINE_HANDLE_ABSTRACT_HANDLER_H
+#ifndef ENGINE_HANDLER_ABSTRACT_HANDLER_H
+#define ENGINE_HANDLER_ABSTRACT_HANDLER_H
 
-#include <engine/handle/context.h>
+#include <engine/handler/context.h>
 
 namespace engine
 {
@@ -42,4 +42,4 @@ public:
 
 } // namespace engine
 
-#endif // ENGINE_HANDLE_ABSTRACT_HANDLER_H
+#endif // ENGINE_HANDLER_ABSTRACT_HANDLER_H

@@ -3,6 +3,7 @@
 
 #include <thread>
 #include <third_party/asio.hpp>
+#include <third_party/g3log/g3log/g3log.hpp>
 
 namespace engine
 {
@@ -32,7 +33,7 @@ public:
     {
         for (std::size_t i = 0; i < io_services_.size(); ++i) {
             std::shared_ptr<std::thread> thread(new std::thread([=]() {io_services_[i]->run(); }));
-            printf("%s_thread_%d : %04X\n", pool_name_.c_str(), i, thread->get_id());
+            LOGF(INFO, "%s_thread_%d : %04X", pool_name_.c_str(), i, thread->get_id());
             threads_.push_back(thread);
         }
     }

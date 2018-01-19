@@ -21,6 +21,7 @@ public:
     asio_buffer(const asio_buffer&) = delete;
     asio_buffer operator=(const asio_buffer&) = delete;
     explicit asio_buffer(std::size_t initial_size = kInitialSize);
+    ~asio_buffer();
 
     asio_buffer& append(const char* /*restrict*/ data, std::size_t len);
 
@@ -32,8 +33,8 @@ public:
     template<typename BASE_DATA_TYPE>
     asio_buffer& append(BASE_DATA_TYPE x)
     {
-        BASE_DATA_TYPE data = adapte_endian(x);
-        return append(&data, sizeof x);    
+        BASE_DATA_TYPE base = adapte_endian(x);
+        return append(&base, sizeof x);    
     }
 
     asio_buffer& append(const std::string& str)
@@ -41,12 +42,14 @@ public:
         return append(str.data(), str.size());
     }
 
+    char peek_index(std::size_t index);
+
     std::unique_ptr<data_block> peek(std::size_t len);
     
     template<typename BASE_DATA_TYPE>
     BASE_DATA_TYPE peek()
     {
-        return get_base_data_type([=](std::size_t len){return peek(len);});
+        return get_base_data_type<BASE_DATA_TYPE>([=](std::size_t len){return peek(len);});
     }
     
     std::unique_ptr<data_block> read(std::size_t len)
@@ -59,11 +62,16 @@ public:
     template<typename BASE_DATA_TYPE>
     BASE_DATA_TYPE read()
     {
-        return get_base_data_type([=](std::size_t len){return read(len);});
+        return get_base_data_type<BASE_DATA_TYPE>([=](std::size_t len){return read(len);});
     }
 
     void retrieve(std::size_t len);
     void has_written(std::size_t len);
+    void set_notify_behind_high_water_mask(const std::function<void()>& handler, std::size_t mask)
+    {
+        notify_behind_high_water_mask_ = handler;
+        high_water_mask_ = mask;
+    }
 
     std::size_t readable_bytes() const
     {
@@ -77,8 +85,8 @@ public:
 
     std::vector<asio::mutable_buffer>& mutable_buffer();
     const std::vector<asio::const_buffer>& const_buffer();
-    std::vector<write_data_ptr>& write_buffer();
-    const std::vector<read_data_ptr>& read_buffer();
+    std::vector<write_data>& write_buffer();
+    const std::vector<read_data>& read_buffer();
 private:
     typedef std::shared_ptr<data_block>     block_ptr;
     typedef std::list<block_ptr>::iterator  buffer_iter;
@@ -119,8 +127,8 @@ private:
     std::list<block_ptr>                buffer_;
     std::vector<asio::mutable_buffer>   mutable_buffer_;
     std::vector<asio::const_buffer>     const_buffer_;
-    std::vector<write_data_ptr>         write_buffer_;
-    std::vector<read_data_ptr>          read_buffer_;
+    std::vector<write_data>        		write_buffer_;
+    std::vector<read_data>          	read_buffer_;
     buffer_iter                         read_buffer_iter_;
     buffer_iter                         write_buffer_iter_;
     std::size_t                         read_index_;
@@ -132,6 +140,8 @@ private:
     std::size_t                         low_use_count_;
     std::mutex                          write_index_mutex_;
     bool                                active_;
+    std::size_t                         high_water_mask_;
+    std::function<void()>               notify_behind_high_water_mask_;
 }; // class asio_buffer
 
 } // namespace engine
