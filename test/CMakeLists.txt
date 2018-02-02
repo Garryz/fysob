@@ -24,3 +24,15 @@ target_link_libraries(echo_server ${CMAKE_THREAD_LIBS_INIT} g3log)
 
 add_executable(echo_client ./simple/echo/echo_client.cpp ${ENGINE_SRCS})
 target_link_libraries(echo_client ${CMAKE_THREAD_LIBS_INIT} g3log)
+
+add_executable(delimiter_server ./handler_test/delimiter_server.cpp ${ENGINE_SRCS})
+target_link_libraries(delimiter_server ${CMAKE_THREAD_LIBS_INIT} g3log)
+
+add_executable(delimiter_client ./handler_test/delimiter_client.cpp ${ENGINE_SRCS})
+target_link_libraries(delimiter_client ${CMAKE_THREAD_LIBS_INIT} g3log)
+
+add_executable(length_server ./handler_test/length_server.cpp ${ENGINE_SRCS})
+target_link_libraries(length_server ${CMAKE_THREAD_LIBS_INIT} g3log)
+
+add_executable(length_client ./handler_test/length_client.cpp ${ENGINE_SRCS})
+target_link_libraries(length_client ${CMAKE_THREAD_LIBS_INIT} g3log)

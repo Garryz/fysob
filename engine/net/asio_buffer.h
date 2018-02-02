@@ -31,10 +31,17 @@ public:
     }
 
     template<typename BASE_DATA_TYPE>
+    asio_buffer& append_endian(BASE_DATA_TYPE x, bool big_endian)
+    {
+        BASE_DATA_TYPE base = adapte_endian<BASE_DATA_TYPE>(
+                x, big_endian);
+        return append(&base, sizeof base);
+    }
+
+    template<typename BASE_DATA_TYPE>
     asio_buffer& append(BASE_DATA_TYPE x)
     {
-        BASE_DATA_TYPE base = adapte_endian(x);
-        return append(&base, sizeof x);    
+        return append_endian(x, true);
     }
 
     asio_buffer& append(const std::string& str)
@@ -42,14 +49,35 @@ public:
         return append(str.data(), str.size());
     }
 
-    char peek_index(std::size_t index);
-
     std::unique_ptr<data_block> peek(std::size_t len);
+
+    template<typename BASE_DATA_TYPE>
+    BASE_DATA_TYPE peek_index_endian(std::size_t index, bool big_endian)
+    {
+        std::size_t bytes = sizeof(BASE_DATA_TYPE);
+        assert(readable_bytes() >= index + bytes);
+        std::unique_ptr<data_block> total_data = peek(index + bytes); 
+        std::unique_ptr<data_block> result_data(new data_block(bytes));
+        std::copy(total_data->data + index, 
+                total_data->data + index + bytes, 
+                result_data->data);
+        return adapte_endian<BASE_DATA_TYPE>(
+                *(reinterpret_cast<BASE_DATA_TYPE*>(result_data->data)), 
+                big_endian);
+    }
     
+    template<typename BASE_DATA_TYPE>
+    BASE_DATA_TYPE peek_endian(bool big_endian)
+    {
+        return get_base_data_type<BASE_DATA_TYPE>(
+                [=](std::size_t len){return peek(len);},
+                big_endian);
+    }
+
     template<typename BASE_DATA_TYPE>
     BASE_DATA_TYPE peek()
     {
-        return get_base_data_type<BASE_DATA_TYPE>([=](std::size_t len){return peek(len);});
+        return peek_endian<BASE_DATA_TYPE>(true);
     }
     
     std::unique_ptr<data_block> read(std::size_t len)
@@ -60,9 +88,17 @@ public:
     }
 
     template<typename BASE_DATA_TYPE>
+    BASE_DATA_TYPE read_endian(bool big_endian)
+    {
+        return get_base_data_type<BASE_DATA_TYPE>(
+                [=](std::size_t len){return read(len);},
+                big_endian);
+    }
+
+    template<typename BASE_DATA_TYPE>
     BASE_DATA_TYPE read()
     {
-        return get_base_data_type<BASE_DATA_TYPE>([=](std::size_t len){return read(len);});
+        return read_endian<BASE_DATA_TYPE>(true);
     }
 
     void retrieve(std::size_t len);
@@ -92,13 +128,17 @@ private:
     typedef std::list<block_ptr>::iterator  buffer_iter;
 
     template<typename BASE_DATA_TYPE>
-    BASE_DATA_TYPE get_base_data_type(const std::function<std::unique_ptr<data_block>(std::size_t)>& func)
+    BASE_DATA_TYPE get_base_data_type(
+            const std::function<std::unique_ptr<data_block>(std::size_t)>& func,
+            bool big_endian)
     {
         std::size_t bytes = sizeof(BASE_DATA_TYPE);
         assert(readable_bytes() >= bytes);
         std::unique_ptr<data_block> free_data = func(bytes);
         if (free_data->len != bytes) return 0;
-        else return adapte_endian(*reinterpret_cast<BASE_DATA_TYPE*>(free_data->data));
+        else return adapte_endian<BASE_DATA_TYPE>(
+                *(reinterpret_cast<BASE_DATA_TYPE*>(free_data->data)), 
+                big_endian);
     }
 
     void check_active();

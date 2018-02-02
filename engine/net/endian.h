@@ -1,7 +1,8 @@
 #ifndef ENGINE_NET_ENDIAN_H
 #define ENGINE_NET_ENDIAN_H
 
-#include <cstddef>
+#include <cstdint>
+#include <cstdio>
 
 namespace engine
 {
@@ -18,9 +19,8 @@ static bool is_small_endian()
 }
 
 template<typename BASE_DATA_TYPE>
-static BASE_DATA_TYPE adapte_endian(BASE_DATA_TYPE value)
+static BASE_DATA_TYPE change_endian(BASE_DATA_TYPE value)
 {
-    if (!is_small_endian()) return value;
     BASE_DATA_TYPE result = 0;
     unsigned char* value_p = reinterpret_cast<unsigned char*>(&value);
     unsigned char* result_p = reinterpret_cast<unsigned char*>(&result);
@@ -29,6 +29,17 @@ static BASE_DATA_TYPE adapte_endian(BASE_DATA_TYPE value)
         result_p[i] = value_p[byte-i-1];
     }
     return result;
+}
+
+template<typename BASE_DATA_TYPE>
+static BASE_DATA_TYPE adapte_endian(BASE_DATA_TYPE value, bool big_endian = true)
+{
+    bool system_small_endian = is_small_endian();
+    if ((system_small_endian && big_endian) ||
+            (!system_small_endian && !big_endian)) {
+        return change_endian<BASE_DATA_TYPE>(value);
+    }
+    return value;
 }
 
 } // namespace engine

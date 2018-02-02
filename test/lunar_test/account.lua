@@ -29,4 +29,8 @@ end
 
 getmetatable(Account).__index = parent
 
-debug.debug()
+--debug.debug()
+
+print(package.path)
+
+print(package.cpath)

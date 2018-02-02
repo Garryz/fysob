@@ -44,35 +44,37 @@ public:
     {
         auto buffer = any_cast<std::shared_ptr<asio_buffer>>(*msg);
         assert(buffer);
-        int min_frame_length = max_frame_length_ + 1;
-        std::string min_delim = "";
-        for (auto delim : delimiters_) {
-            int frame_length = index_of(buffer, delim);
-            if (frame_length >= 0 && frame_length < min_frame_length) {
-                min_frame_length = frame_length;
-                min_delim = delim;
-            }
-        }
-
-        if (min_delim != "") {
-            int min_delim_length = min_delim.size();
-
-            if (min_frame_length > max_frame_length_) {
-                LOGF(WARNING, "min_frame_length = %d, max_frame_length = %d", 
-                        min_frame_length, max_frame_length_);
-                return;
+        while (buffer->readable_bytes() > 0) {
+            int min_frame_length = max_frame_length_ + 1;
+            std::string min_delim = "";
+            for (auto delim : delimiters_) {
+                int frame_length = index_of(buffer, delim);
+                if (frame_length >= 0 && frame_length < min_frame_length) {
+                    min_frame_length = frame_length;
+                    min_delim = delim;
+                }
             }
 
-            std::unique_ptr<data_block> data;
-            if (strip_delimiter_) {
-                data = buffer->read(min_frame_length);
-                buffer->retrieve(min_delim_length);
-            } else {
-                data = buffer->read(min_frame_length + min_delim_length);
+            if (min_delim != "") {
+                int min_delim_length = min_delim.size();
+
+                if (min_frame_length > max_frame_length_) {
+                    LOGF(WARNING, "min_frame_length = %d, max_frame_length = %d", 
+                            min_frame_length, max_frame_length_);
+                    buffer->retrieve(min_frame_length + min_delim_length);
+                    return;
+                }
+
+                std::unique_ptr<data_block> data;
+                if (strip_delimiter_) {
+                    data = buffer->read(min_frame_length);
+                    buffer->retrieve(min_delim_length);
+                } else {
+                    data = buffer->read(min_frame_length + min_delim_length);
+                }
+                auto response = new any(read_data(*data));
+                ctx->fire_read(std::unique_ptr<any>(response));
             }
-            auto response = new any(read_data(*data));
-            ctx->fire_read(std::unique_ptr<any>(response));
-            return;
         }
     }
 
@@ -88,7 +90,8 @@ private:
             std::size_t haystack_index = i;
             std::size_t needle_index;
             for (needle_index = 0; needle_index < needle.size(); ++needle_index) {
-                if (haystack->peek_index(haystack_index) != needle[needle_index]) {
+                if (haystack->peek_index_endian<char>(haystack_index, true) 
+                        != needle[needle_index]) {
                     break;
                 } else {
                     haystack_index++;

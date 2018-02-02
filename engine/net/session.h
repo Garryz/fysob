@@ -124,6 +124,16 @@ public:
     }
 
     template<typename BASE_DATA_TYPE>
+    void write_endian(BASE_DATA_TYPE x, bool big_endian)
+    {
+        auto self(shared_from_this());
+        io_work_service_.post([=,&self](){
+            write_buffer_->append_endian(x, big_endian);
+            notify_write(sizeof(BASE_DATA_TYPE));
+        });
+    }
+
+    template<typename BASE_DATA_TYPE>
     void write(BASE_DATA_TYPE x)
     {
         auto self(shared_from_this());

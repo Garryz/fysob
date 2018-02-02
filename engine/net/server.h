@@ -93,15 +93,11 @@ public:
             uint32_t id)
     {
         std::shared_ptr<session> result = nullptr;
-        for (auto it = map.begin(); it != map.end();) {
-            if (it->first == id) {
-                result = it->second;
-                it = map.erase(it);
-                break;
-            }
-            else {
-                it++;
-            }
+        std::map<uint32_t, std::shared_ptr<session>>::iterator it;
+        it = map.find(id);
+        if (it != map.end()) {
+            result = it->second;
+            map.erase(it);
         }
         return result;
     }

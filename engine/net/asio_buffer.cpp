@@ -156,30 +156,6 @@ asio_buffer& asio_buffer::append(const char* /*restrict*/ data, std::size_t len)
     return *this;
 }
 
-char asio_buffer::peek_index(std::size_t index)
-{
-    assert(index <= readable_bytes_);
-
-    buffer_iter read_buffer_iter = read_buffer_iter_;
-    std::size_t read_index = read_index_;
-
-    std::size_t read_block_size = (*read_buffer_iter)->len;
-    std::size_t read_block_remain_len = read_block_size - read_index;
-    if (read_block_remain_len > index) {
-        return *((*read_buffer_iter)->data + read_index + index);
-    } else {
-        std::size_t remain_index = index - read_block_remain_len;
-        read_buffer_iter++;
-        read_block_size = (*read_buffer_iter)->len;
-        while (read_block_size <= remain_index) {
-            remain_index -= read_block_size;
-            read_buffer_iter++;
-            read_block_size = (*read_buffer_iter)->len;
-        }
-        return *((*read_buffer_iter)->data + remain_index); 
-    }
-}
-
 std::unique_ptr<data_block> asio_buffer::peek(std::size_t len)
 {
     assert(len <= readable_bytes_);
