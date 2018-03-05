@@ -16,3 +16,12 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/third_party/g3log)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/any_test)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/lunar_test)
+
+
+set(bin_root "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+file(COPY config DESTINATION ${bin_root})
+file(COPY script DESTINATION ${bin_root})
+
+add_executable(app ./engine/app/main.cpp)
+set_target_properties(app PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${bin_root})
+
