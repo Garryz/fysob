@@ -59,6 +59,7 @@ public:
     {
         auto self(shared_from_this());
         init_handlers(self);
+        pipeline_->fire_connect();
         read();
     }
 

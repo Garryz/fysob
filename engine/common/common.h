@@ -6,6 +6,12 @@
 namespace engine
 {
 
+enum class AppType {
+    ROUTE   = 1,
+    GAME    = 2,
+    ARENA   = 3,
+};
+
 static std::atomic<uint32_t> auto_session_increase_id_{0};
 
 static uint32_t get_session_increase_id()

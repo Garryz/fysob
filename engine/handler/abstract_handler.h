@@ -21,6 +21,7 @@ public:
 
     virtual void connect(context* ctx)
     {
+        printf("abstract handler connect there \n");
         ctx->fire_connect(); 
     }
 
