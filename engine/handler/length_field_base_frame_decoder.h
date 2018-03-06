@@ -152,7 +152,6 @@ public:
             if (frame_length > max_frame_length_) {
                 LOGF(WARNING, "frame_length = %d, max_frame_length = %d",
                         frame_length, max_frame_length_);
-                buffer->retrieve(frame_length);
                 return;
             }
 

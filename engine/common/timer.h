@@ -48,7 +48,7 @@ struct node_link
 struct timer_node
 {
     node_link   link;
-    u_int64_t   dead_time;
+    uint64_t    dead_time;
     timer_task  timer;
     timer_node(timer_task t, uint64_t dt)
         : dead_time(dt)

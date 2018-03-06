@@ -22,13 +22,13 @@ public:
 
     virtual void connect(context* ctx)
     {
-        printf("on connect session there \n");
         net_manager::on_connect(ctx);    
     }
 
     virtual void decode(context* ctx, std::unique_ptr<any> msg)
     {
-        printf("on decode session there \n");
+        read_data data = any_cast<read_data>(*msg);
+        net_manager::on_message(ctx->session_id(), data.data, data.len);
     }
 };
 

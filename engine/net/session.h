@@ -58,7 +58,9 @@ public:
     void start(const std::function<void(std::shared_ptr<session>)>& init_handlers)
     {
         auto self(shared_from_this());
-        init_handlers(self);
+        if (init_handlers) {
+            init_handlers(self);
+        }
         pipeline_->fire_connect();
         read();
     }

@@ -7,9 +7,6 @@ find_package(Threads)
 add_executable(echo echo)
 target_link_libraries(echo ${CMAKE_THREAD_LIBS_INIT})
 
-add_executable(client client)
-target_link_libraries(client ${CMAKE_THREAD_LIBS_INIT})
-
 aux_source_directory(${CMAKE_SOURCE_DIR}/engine/handler ENGINE_SRCS)
 aux_source_directory(${CMAKE_SOURCE_DIR}/engine/net ENGINE_SRCS)
 
@@ -36,3 +33,8 @@ target_link_libraries(length_server ${CMAKE_THREAD_LIBS_INIT} g3log)
 
 add_executable(length_client ./handler_test/length_client.cpp ${ENGINE_SRCS})
 target_link_libraries(length_client ${CMAKE_THREAD_LIBS_INIT} g3log)
+
+add_executable(client client ${ENGINE_SRCS})
+target_link_libraries(client ${CMAKE_THREAD_LIBS_INIT} g3log)
+
+

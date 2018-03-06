@@ -75,6 +75,18 @@ public:
             luaL_error(lua_state_, "on_connect error! %s \n", lua_tostring(lua_state_, -1)); 
         }
     }
+
+    static void on_message(std::size_t session_id, const char* msg, std::size_t msg_len)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        lua_getglobal(lua_state_, "on_message");
+        lua_pushnumber(lua_state_, session_id);
+        lua_pushlstring(lua_state_, msg, msg_len);
+
+        if (lua_pcall(lua_state_, 2, 0, 0) != 0) {
+            luaL_error(lua_state_, "on_message error! %s \n", lua_tostring(lua_state_, -1));
+        }
+    }
 private:
     static lua_State*                       lua_state_;
     static std::map<std::size_t, context*>  context_map_;

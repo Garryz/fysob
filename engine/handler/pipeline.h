@@ -189,6 +189,10 @@ private:
         {
         }
 
+        virtual void connect()
+        {
+        }
+
         virtual void read(std::unique_ptr<any> msg)
         {
         }
