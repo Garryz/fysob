@@ -27,6 +27,9 @@ public:
         lua_state_ = luaL_newstate();
         luaL_openlibs(lua_state_);
 
+        lua_pushcfunction(lua_state_, net_manager::write_message);
+        lua_setglobal(lua_state_, "write_message");
+
         check_timer();
 
         timer_service_pool_.run();
@@ -69,35 +72,64 @@ public:
         std::lock_guard<std::mutex> lock(mutex_); 
         context_map_[ctx->session_id()] = ctx;
         lua_getglobal(lua_state_, "on_connect");
-        lua_pushnumber(lua_state_, ctx->session_id());
+        lua_pushinteger(lua_state_, ctx->session_id());
 
         if (lua_pcall(lua_state_, 1, 0, 0) != 0) {
             luaL_error(lua_state_, "on_connect error! %s \n", lua_tostring(lua_state_, -1)); 
         }
     }
 
-    static void on_message(std::size_t session_id, const char* msg, std::size_t msg_len)
+    static void on_message(uint32_t session_id, const char* msg, std::size_t msg_len)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         lua_getglobal(lua_state_, "on_message");
-        lua_pushnumber(lua_state_, session_id);
+        lua_pushinteger(lua_state_, session_id);
         lua_pushlstring(lua_state_, msg, msg_len);
 
         if (lua_pcall(lua_state_, 2, 0, 0) != 0) {
             luaL_error(lua_state_, "on_message error! %s \n", lua_tostring(lua_state_, -1));
         }
     }
+
+    static int write_message(lua_State* L)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        uint32_t session_id = luaL_checkinteger(L, 1);
+        std::map<uint32_t, context*>::iterator it;
+        it = context_map_.find(session_id);
+        if (it != context_map_.end()) {
+            read_data msg;
+            msg.data = luaL_checklstring(L, 2, &msg.len);
+            auto response = new any(msg);
+            it->second->fire_write(std::unique_ptr<any>(response));
+        }
+        return 0;
+    }
+
+    static int close_connection(lua_State* L)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        uint32_t session_id = luaL_checkinteger(L, 1);
+        context* result = nullptr;
+        std::map<uint32_t, context*>::iterator it;
+        if (it != context_map_.end()) {
+            result = it->second;
+            context_map_.erase(it);
+            result->fire_close();
+        }
+        return 0;
+    }
 private:
-    static lua_State*                       lua_state_;
-    static std::map<std::size_t, context*>  context_map_;
-    static timer                            timer_;
-    static std::mutex                       mutex_;
-    static io_service_pool                  timer_service_pool_;
-    static asio::steady_timer               asio_timer_;
+    static lua_State*                   lua_state_;
+    static std::map<uint32_t, context*> context_map_;
+    static timer                        timer_;
+    static std::mutex                   mutex_;
+    static io_service_pool              timer_service_pool_;
+    static asio::steady_timer           asio_timer_;
 }; // class net_manager
 
 lua_State* net_manager::lua_state_;
-std::map<std::size_t, context*> net_manager::context_map_;
+std::map<uint32_t, context*> net_manager::context_map_;
 timer net_manager::timer_;
 std::mutex net_manager::mutex_;
 io_service_pool net_manager::timer_service_pool_(1, "timer_pool");

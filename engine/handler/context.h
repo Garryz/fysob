@@ -70,7 +70,7 @@ public:
         }
     }
 
-    std::size_t session_id();
+    std::uint32_t session_id();
 
     void set_user_data(any user_data);
 

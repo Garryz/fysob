@@ -12,6 +12,8 @@ enum class AppType {
     ARENA   = 3,
 };
 
+static std::size_t MAX_MESSAGE_SIZE = 1024;
+
 static std::atomic<uint32_t> auto_session_increase_id_{0};
 
 static uint32_t get_session_increase_id()

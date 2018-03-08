@@ -26,7 +26,7 @@ void context::close()
     handler_->close(this);
 }
 
-std::size_t context::session_id()
+std::uint32_t context::session_id()
 {
     return pipeline_->session_id();
 }

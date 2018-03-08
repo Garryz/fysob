@@ -91,6 +91,14 @@ int main(int argc, char* argv[])
 
         s.run();
 
+        lua_getglobal(L, "test_write_message");
+        lua_pushinteger(L, 1);
+        lua_pushstring(L, "123456");
+
+        if (lua_pcall(L, 2, 0, 0) != 0) {
+            luaL_error(L, "test_write_message error! %s \n", lua_tostring(L, -1));
+        }
+
         getchar();
 
         s.stop();
