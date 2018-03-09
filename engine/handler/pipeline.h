@@ -92,6 +92,11 @@ public:
                     std::unique_ptr<any>(wrap_buffer)));
     }
 
+    void fire_closed()
+    {
+        head_->notify_closed();
+    }
+
     void set_user_data(any user_data)
     {
         user_data_ = user_data;
@@ -172,6 +177,11 @@ private:
         {
             pipeline_->close();
         }
+
+        virtual void notify_closed()
+        {
+            fire_closed();
+        }
     private:
     }; // class head_context
 
@@ -205,6 +215,10 @@ private:
         virtual void close()
         {
             fire_close();
+        }
+
+        virtual void notify_closed()
+        {
         }
     }; // class tail_context
 

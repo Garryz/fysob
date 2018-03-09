@@ -70,6 +70,15 @@ public:
         }
     }
 
+    virtual void notify_closed();
+
+    void fire_closed()
+    {
+        if (next) {
+            next->notify_closed();
+        }
+    }
+
     std::uint32_t session_id();
 
     void set_user_data(any user_data);

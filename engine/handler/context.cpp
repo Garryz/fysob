@@ -26,6 +26,11 @@ void context::close()
     handler_->close(this);
 }
 
+void context::notify_closed()
+{
+    handler_->notify_closed(this);
+}
+
 std::uint32_t context::session_id()
 {
     return pipeline_->session_id();

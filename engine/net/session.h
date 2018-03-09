@@ -111,11 +111,6 @@ public:
         return handle_count_ == 0;
     }
 
-    void reset_handle_count()
-    {
-        handle_count_ = 0;
-    }
-
     void write(const char* data, std::size_t len)
     {
         auto block = std::make_shared<data_block>(data, len);
@@ -198,8 +193,11 @@ private:
             if (close_flag_ && !writing_) {
                 socket_.shutdown(tcp::socket::shutdown_both);
                 socket_.close();
-                if (work_read_count_ == 0 && close_handler_) {
-                    close_handler_(id());
+                if (work_read_count_ == 0) {
+                    pipeline_->fire_closed();
+                    if (close_handler_) {
+                        close_handler_(id());
+                    }
                 }
                 return true;
             }
@@ -223,6 +221,7 @@ private:
             work_read_count_++;
             io_work_service_.post([this, &self](){
                 pipeline_->fire_read();
+                handle_count_--;
                 work_read_count_--;
                 close_if_necessary(); 
             });
@@ -242,6 +241,7 @@ private:
     {
         if (!writing_ && pending_write_len_ > 0) {
             writing_ = true;
+            handle_count_++;
             auto self(shared_from_this());
             socket_.async_write_some(write_buffer_->const_buffer(),
                 [this, &self](std::error_code ec, std::size_t length){handle_write(ec, length);});
@@ -250,15 +250,18 @@ private:
 
     void handle_write(std::error_code& ec, std::size_t length)
     {
-        handle_count_++;
+        handle_count_--;
         writing_ = false;
         auto close_after_last_write = [this]()->bool {
             if (close_flag_) {
                 socket_.shutdown(tcp::socket::shutdown_both);
                 if (!reading_) {
                     socket_.close();
-                    if (work_read_count_ == 0 && close_handler_) {
-                        close_handler_(id());
+                    if (work_read_count_ == 0) {
+                        pipeline_->fire_closed();
+                        if (close_handler_) {
+                            close_handler_(id());
+                        }
                     }
                 }
                 return true;
@@ -298,6 +301,7 @@ private:
                 socket_.get_io_service().post([this, &self](){
                     socket_.shutdown(tcp::socket::shutdown_both);
                     socket_.close();
+                    pipeline_->fire_closed();
                     if (close_handler_) {
                         close_handler_(id());
                     }

@@ -30,6 +30,9 @@ public:
         lua_pushcfunction(lua_state_, net_manager::write_message);
         lua_setglobal(lua_state_, "write_message");
 
+        lua_pushcfunction(lua_state_, net_manager::close_connection);
+        lua_setglobal(lua_state_, "close_connection");
+
         check_timer();
 
         timer_service_pool_.run();
@@ -88,6 +91,23 @@ public:
 
         if (lua_pcall(lua_state_, 2, 0, 0) != 0) {
             luaL_error(lua_state_, "on_message error! %s \n", lua_tostring(lua_state_, -1));
+        }
+    }
+
+    static void on_passive_clean(uint32_t session_id)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::map<uint32_t, context*>::iterator it;
+        it = context_map_.find(session_id);
+        if (it != context_map_.end()) {
+            context_map_.erase(it);
+        }
+
+        lua_getglobal(lua_state_, "on_passive_clean");
+        lua_pushinteger(lua_state_, session_id);
+
+        if (lua_pcall(lua_state_, 1, 0, 0) != 0) {
+            luaL_error(lua_state_, "on_passive_clean error! %s \n", lua_tostring(lua_state_, -1));
         }
     }
 

@@ -30,6 +30,11 @@ public:
         read_data data = any_cast<read_data>(*msg);
         net_manager::on_message(ctx->session_id(), data.data, data.len);
     }
+
+    virtual void notify_closed(context* ctx)
+    {
+        net_manager::on_passive_clean(ctx->session_id());
+    }
 };
 
 int main(int argc, char* argv[])

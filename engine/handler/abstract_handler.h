@@ -38,6 +38,11 @@ public:
     {
         ctx->fire_close();
     }
+
+    virtual void notify_closed(context* ctx)
+    {
+        ctx->fire_closed();
+    }
 }; // class abstract_handler
 
 } // namespace engine
