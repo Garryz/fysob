@@ -16,3 +16,8 @@ function test_write_message(session_id, msg)
     print("test write message lua")
     write_message(session_id, msg)
 end 
+
+local timer = require("common/timer")
+timer.add_timer(10, 0, function()
+    print("test add timer")
+end)

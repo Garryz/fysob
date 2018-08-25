@@ -150,7 +150,7 @@ public:
     }
 
     uint32_t add_task(uint32_t interval, timer_type type,
-            const std::function<void()> callback)
+            const std::function<void()>& callback)
     {
         timer_task task;
         task.id         = get_timer_increase_id();
@@ -161,10 +161,10 @@ public:
         return task.id;
     }
 
-    void remove_task(uint32_t task_index)
+    void remove_task(uint32_t task_id)
     {
         std::map<uint32_t, timer_node*>::iterator it;
-        it = timer_map_.find(task_index);
+        it = timer_map_.find(task_id);
         if (it != timer_map_.end()) {
             timer_node* node = it->second;
             timer_map_.erase(it);

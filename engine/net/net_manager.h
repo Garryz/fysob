@@ -27,11 +27,13 @@ public:
         lua_state_ = luaL_newstate();
         luaL_openlibs(lua_state_);
 
-        lua_pushcfunction(lua_state_, net_manager::write_message);
-        lua_setglobal(lua_state_, "write_message");
+        lua_register(lua_state_, "write_message", net_manager::write_message);
 
-        lua_pushcfunction(lua_state_, net_manager::close_connection);
-        lua_setglobal(lua_state_, "close_connection");
+        lua_register(lua_state_, "close_connection", net_manager::close_connection);
+
+        lua_register(lua_state_, "add_timer", net_manager::add_timer);
+
+        lua_register(lua_state_, "remove_timer", net_manager::remove_timer);
 
         check_timer();
 
@@ -138,6 +140,26 @@ public:
             result->fire_close();
         }
         return 0;
+    }
+
+    static int add_timer(lua_State* L)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        uint32_t interval   = luaL_checkinteger(L, 1);
+        uint32_t type       = luaL_checkinteger(L, 2);
+        uint32_t index      = luaL_checkinteger(L, 3);
+
+        uint32_t id = timer_.add_task(interval, static_cast<timer_type>(type), 
+                [type, index](){
+                    
+                });
+    }
+
+    static int remove_timer(lua_State* L)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        uint32_t index      = luaL_checkinteger(L, 1);
+
     }
 private:
     static lua_State*                   lua_state_;
